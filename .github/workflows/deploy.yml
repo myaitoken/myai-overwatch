@@ -1,0 +1,32 @@
+name: Deploy myai-overwatch
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      skip_gate:
+        description: "Skip pre-deploy gate (emergency)"
+        required: false
+        default: "false"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pre-deploy gate
+        if: github.event.inputs.skip_gate != 'true'
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST https://gateway.infinihash.com/pre-deploy-check/myai-overwatch \
+            -H "Authorization: Bearer ${{ secrets.INFRA_GATEWAY_TOKEN }}")
+          if [ "$STATUS" != "200" ]; then
+            echo "Pre-deploy gate failed (HTTP $STATUS)" && exit 1
+          fi
+
+      - name: Deploy via infra-gateway
+        run: |
+          curl -sf -X POST https://gateway.infinihash.com/deploy/myai-overwatch \
+            -H "Authorization: Bearer ${{ secrets.INFRA_GATEWAY_TOKEN }}" \
+            | tee /tmp/deploy-result.json
+          cat /tmp/deploy-result.json

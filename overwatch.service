@@ -1,0 +1,33 @@
+[Unit]
+Description=MyAi Agent Overwatch
+Documentation=https://github.com/myaitoken/myai-overwatch
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=overwatch
+WorkingDirectory=/opt/myai-overwatch
+ExecStart=/opt/myai-overwatch/venv/bin/python /opt/myai-overwatch/overwatch.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# ── Environment ──────────────────────────────────────────────────────────────
+# Secrets are injected from /opt/myai-overwatch/.env (gitignored)
+EnvironmentFile=/opt/myai-overwatch/.env
+
+# ── Resource limits ──────────────────────────────────────────────────────────
+LimitNOFILE=65536
+MemoryMax=256M
+CPUQuota=50%
+
+# ── Security hardening ───────────────────────────────────────────────────────
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/myai-overwatch /opt/myai-overwatch
+
+[Install]
+WantedBy=multi-user.target

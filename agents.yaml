@@ -1,0 +1,54 @@
+# agents.yaml — Overwatch recovery configuration
+#
+# Keys are matched against agent names (case-insensitive, substring).
+# Most specific wins: exact > substring > "default".
+#
+# method options:
+#   systemctl  — calls gateway POST /systemctl/{host}/{service}/{action}
+#   exec       — calls gateway POST /exec/{host}  {"command": "..."}
+#   deploy     — calls gateway POST /deploy/{service}  (full redeploy)
+#   alert_only — notify only, no automated recovery
+
+# ── hal9000 GPU worker ───────────────────────────────────────────────────────
+hal9000:
+  method: systemctl
+  host: hal9000
+  service: ollama
+  action: restart
+  note: "Restart Ollama on the GPU box; both GPUs auto-discovered by Ollama"
+
+# ── Tanner (remote GPU via Tailscale) ────────────────────────────────────────
+# Brain/AWS cannot reach 100.125.120.72 — alert-only until we add a relay
+tanner:
+  method: alert_only
+  note: "Tailscale node — no direct path from AWS bridge; SSH via Mac sshpass if urgent"
+
+# ── myai-agent on CT105 (LAN) ────────────────────────────────────────────────
+ct105:
+  method: exec
+  host: ct105
+  cmd: "systemctl restart myai-agent"
+
+# ── myai-agent generic (any LAN CT agent) ────────────────────────────────────
+myai-agent:
+  method: exec
+  host: ct105
+  cmd: "systemctl restart myai-agent"
+
+# ── myai-coordinator (AWS) ───────────────────────────────────────────────────
+# Overwatch runs on the same bridge — restart the coordinator process directly
+coordinator:
+  method: exec
+  host: aws-myai-coordinator
+  cmd: "supervisorctl restart myai-coordinator || pm2 restart myai-coordinator || systemctl restart myai-coordinator"
+
+# ── myai-proxy (CT125) ───────────────────────────────────────────────────────
+proxy:
+  method: exec
+  host: ct125
+  cmd: "systemctl restart myai-proxy"
+
+# ── Fallback: unknown agents → alert only ────────────────────────────────────
+default:
+  method: alert_only
+  note: "No recovery mapping — add entry above for automated healing"
