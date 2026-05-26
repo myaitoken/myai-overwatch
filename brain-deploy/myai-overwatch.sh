@@ -11,6 +11,7 @@ S3_KEY="deploy/${SERVICE}.tar.gz"
 INSTANCE_ID="i-0ee15650c3fa2eec7"
 CONTAINER="${SERVICE}"
 INSTALL_DIR="/opt/${SERVICE}"
+PROFILE="${AWS_PROFILE:-infinihash}"
 
 echo "[overwatch-deploy] Cloning ${REPO}"
 git clone --depth=1 "${REPO}" "${WORK_DIR}"
@@ -22,7 +23,7 @@ COPYFILE_DISABLE=1 tar \
   -czf "/tmp/${SERVICE}.tar.gz" -C "${WORK_DIR}" .
 
 echo "[overwatch-deploy] Uploading to S3"
-aws s3 cp "/tmp/${SERVICE}.tar.gz" "s3://${S3_BUCKET}/${S3_KEY}" --region us-east-2
+aws s3 cp "/tmp/${SERVICE}.tar.gz" "s3://${S3_BUCKET}/${S3_KEY}" --region us-east-2 --profile "${PROFILE}"
 
 # Heredoc quoting: inner single-quotes are fine; outer bash will expand $VARS
 REMOTE=$(cat <<REMOTE
@@ -38,7 +39,7 @@ if ! incus info ${CONTAINER} &>/dev/null; then
 fi
 
 # Pull tarball
-aws s3 cp s3://${S3_BUCKET}/${S3_KEY} /tmp/${SERVICE}.tar.gz --region us-east-2
+aws s3 cp s3://${S3_BUCKET}/${S3_KEY} /tmp/${SERVICE}.tar.gz --region us-east-2 --profile infinihash
 incus file push /tmp/${SERVICE}.tar.gz ${CONTAINER}/tmp/${SERVICE}.tar.gz
 
 incus exec ${CONTAINER} -- bash -c '
