@@ -27,6 +27,7 @@ aws s3 cp "/tmp/${SERVICE}.tar.gz" "s3://${S3_BUCKET}/${S3_KEY}" --region us-eas
 
 # Heredoc quoting: inner single-quotes are fine; outer bash will expand $VARS
 REMOTE=$(cat <<REMOTE
+#!/bin/bash
 set -euo pipefail
 
 # Create container if missing
@@ -76,6 +77,7 @@ REMOTE
 echo "[overwatch-deploy] Deploying via SSM"
 aws ssm send-command \
     --region us-east-2 \
+    --profile "${PROFILE}" \
     --instance-ids "${INSTANCE_ID}" \
     --document-name "AWS-RunShellScript" \
     --parameters "commands=[\"$(echo "$REMOTE" | sed 's/"/\\"/g')\"]" \
