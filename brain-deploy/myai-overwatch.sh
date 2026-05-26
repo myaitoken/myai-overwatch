@@ -39,7 +39,7 @@ if ! incus info ${CONTAINER} &>/dev/null; then
 fi
 
 # Pull tarball
-aws s3 cp s3://${S3_BUCKET}/${S3_KEY} /tmp/${SERVICE}.tar.gz --region us-east-2 --profile infinihash
+aws s3 cp s3://${S3_BUCKET}/${S3_KEY} /tmp/${SERVICE}.tar.gz --region us-east-2
 incus file push /tmp/${SERVICE}.tar.gz ${CONTAINER}/tmp/${SERVICE}.tar.gz
 
 incus exec ${CONTAINER} -- bash -c '
